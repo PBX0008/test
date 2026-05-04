@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0369a1" />
+  <title>NCLEX RN Admin Controller</title>
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="stylesheet" href="assets/admin.css?v=98" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="admin-hero">
+      <div>
+        <p class="eyebrow">Master Controller</p>
+        <h1>NCLEX RN Admin</h1>
+        <p>View this browser’s saved progress on GitHub Pages. If you later connect a secure backend, it can also show remote users and device details.</p>
+      </div>
+      <a href="index.html" class="admin-link">Back to app</a>
+    </section>
+
+    <section class="admin-card config-card">
+      <h2>Connection</h2>
+      <p id="adminConnectionStatus">Checking admin endpoint…</p>
+      <label>Admin API key <input id="adminApiKey" type="password" placeholder="Optional backend key" autocomplete="off" /></label>
+      <div class="admin-actions">
+        <button id="saveAdminKeyBtn" type="button">Save key</button>
+        <button id="refreshAdminBtn" type="button">Refresh</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-table-head">
+        <h2>Active Users</h2>
+        <span id="adminUserCount">0 users</span>
+      </div>
+      <div class="admin-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Status</th>
+              <th>Location</th>
+              <th>Browser</th>
+              <th>Device</th>
+              <th>Progress</th>
+              <th>Last seen</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersBody">
+            <tr><td colspan="7">No users loaded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card admin-note">
+      <h2>GitHub Pages tracking note</h2>
+      <p>GitHub Pages is static, so <code>admin.html</code> can read progress saved in the same browser through <code>localStorage</code>. It cannot securely collect progress from other people's phones or laptops without a backend. This package is configured to work on GitHub Pages without login and without location permission.</p>
+    </section>
+  </main>
+  <script src="repo-config.js?v=98"></script>
+  <script src="assets/haptics.js?v=98"></script>
+  <script src="assets/access.js?v=98"></script>
+  <script src="assets/admin.js?v=98"></script>
+</body>
+</html>

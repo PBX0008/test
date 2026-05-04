@@ -1,0 +1,10 @@
+{
+  "name": "nclex-rn-practice-bank",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:catalog": "node tools/build-catalog.mjs",
+    "check": "node --check assets/app.js && node tools/build-catalog.mjs"
+  }
+}
