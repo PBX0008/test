@@ -40,6 +40,7 @@
     qidDisplay: $('qidDisplay'),
     designedExamMain: $('designedExamMain'),
     tutoredToggle: $('tutoredToggle'),
+    mobileTutoredToggle: $('mobileTutoredToggle'),
     heroQbankRing: $('heroQbankRing'),
     heroDoneRing: $('heroDoneRing'),
     qbankUsagePercent: $('qbankUsagePercent'),
@@ -100,6 +101,7 @@
   let questions = [];
   let state = freshState();
   let timerId = null;
+  let mobileHeaderFitFrame = 0;
   let statVisibility = { time: true, progress: true, score: true };
   let showExplanations = true;
   let catalogHeroMetrics = null;
@@ -396,6 +398,27 @@
     scrollExamToTop();
   }
 
+  function fitMobileExamHeaderText() {
+    const title = ui.testMetaLine;
+    const copy = title?.closest('.exam-brand-copy');
+    if (!title || !copy) return;
+
+    if (mobileHeaderFitFrame) cancelAnimationFrame(mobileHeaderFitFrame);
+    copy.style.removeProperty('--mobile-title-size');
+    if (!window.matchMedia('(max-width: 760px)').matches || !document.body.classList.contains('exam-active')) return;
+
+    mobileHeaderFitFrame = requestAnimationFrame(() => {
+      mobileHeaderFitFrame = 0;
+      let size = 14;
+      const minimum = 8;
+      copy.style.setProperty('--mobile-title-size', `${size}px`);
+      while (title.scrollWidth > title.clientWidth + 1 && size > minimum) {
+        size -= 0.5;
+        copy.style.setProperty('--mobile-title-size', `${size}px`);
+      }
+    });
+  }
+
   function updateExamFileName() {
     if (!ui.examFileName) return;
     const label = 'EXIT';
@@ -404,6 +427,7 @@
     if (ui.testMetaLine) ui.testMetaLine.textContent = activeTest?.title || 'NCLEX-RN';
     ui.backToListBtn?.setAttribute('aria-label', `Exit ${title} and go back to dashboard`);
     ui.backToListBtn?.setAttribute('title', 'EXIT — tap to go back');
+    fitMobileExamHeaderText();
   }
 
   function storageGet(key, fallback) {
@@ -1455,6 +1479,7 @@
     if (ui.questionIdBadge) ui.questionIdBadge.textContent = `QID-${qidText}`;
     if (ui.qidDisplay) ui.qidDisplay.textContent = `QID-${qidText}`;
     if (ui.testMetaLine) ui.testMetaLine.textContent = activeTest?.title || 'NCLEX-RN';
+    fitMobileExamHeaderText();
     ui.designedExamMain?.classList.toggle('show-result', completed && showExplanations);
     updateMarkReviewButton();
     ui.questionText.innerHTML = `<div class="question-stem">${question.question}</div>`;
@@ -1567,6 +1592,7 @@
       state.completed[state.currentIndex] = true;
       if (isAnswerCorrect(question, answer)) state.correctCount += 1;
     }
+    stopTimer();
     saveProgress();
     renderQuestion();
     scrollQuestionResultToTop();
@@ -1736,10 +1762,25 @@
     timerId = null;
   }
 
+  function shouldTimerRunForCurrentQuestion() {
+    if (!questions.length || state.finished || !ui.examView?.classList.contains('active')) return false;
+    if (!showExplanations) return true;
+    return !Boolean(state.completed[state.currentIndex]);
+  }
+
+  function syncTimerForCurrentQuestion() {
+    if (shouldTimerRunForCurrentQuestion()) {
+      if (!timerId) startTimer();
+    } else {
+      stopTimer();
+    }
+  }
+
   function prevQuestion() {
     if (state.currentIndex > 0) {
       state.currentIndex -= 1;
       renderQuestion();
+      syncTimerForCurrentQuestion();
       scrollExamToTop();
     }
   }
@@ -1752,6 +1793,7 @@
     if (state.currentIndex < questions.length - 1) {
       state.currentIndex += 1;
       renderQuestion();
+      syncTimerForCurrentQuestion();
       scrollExamToTop();
     }
   }
@@ -1860,7 +1902,7 @@
       } else {
         showView('exam');
         renderQuestion();
-        startTimer();
+        syncTimerForCurrentQuestion();
       }
     } catch (error) {
       console.error(error);
@@ -2055,8 +2097,11 @@
 
   function applyTheme() {
     const theme = storageGet(STORAGE.theme, 'light');
-    document.body.classList.toggle('dark', theme === 'dark');
-    [ui.themeBtn, ui.examThemeBtn].forEach((button) => {
+    const isDark = theme === 'dark';
+    document.body.classList.toggle('dark', isDark);
+    const themeColorMeta = document.getElementById('themeColorMeta');
+    if (themeColorMeta) themeColorMeta.setAttribute('content', isDark ? '#121720' : '#0067A9');
+    [ui.themeBtn, ui.examThemeBtn, ui.examThemeUtilityBtn].forEach((button) => {
       if (!button) return;
       const icon = button.querySelector('.material-symbols-outlined');
       if (icon) icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
@@ -2162,14 +2207,17 @@
   }
 
   function updateTutoredToggle() {
-    if (!ui.tutoredToggle) return;
-    ui.tutoredToggle.textContent = showExplanations ? 'Tutored' : 'Untutored';
-    ui.tutoredToggle.classList.toggle('is-untutored', !showExplanations);
-    ui.tutoredToggle.setAttribute('aria-pressed', String(showExplanations));
+    [ui.tutoredToggle, ui.mobileTutoredToggle].forEach((button) => {
+      if (!button) return;
+      button.textContent = showExplanations ? 'Tutored' : 'Untutored';
+      button.classList.toggle('is-untutored', !showExplanations);
+      button.setAttribute('aria-pressed', String(showExplanations));
+    });
     document.body.classList.toggle('untutored-active', !showExplanations);
     ui.bottomBar?.classList.toggle('untutored-mode', !showExplanations);
     ui.questionResultStrip?.classList.toggle('hidden', !showExplanations);
     if (!showExplanations) ui.feedbackCard?.classList.add('hidden');
+    syncTimerForCurrentQuestion();
     if (questions.length) updateButtons();
   }
 
@@ -2229,11 +2277,13 @@
     addEvent(ui.gurbaniAudio, 'pause', () => updateGurbaniCardState(false));
     addEvent(ui.gurbaniAudio, 'ended', () => updateGurbaniCardState(false));
     addEvent(ui.gurbaniAudio, 'error', () => updateGurbaniCardState(false));
-    addEvent(ui.tutoredToggle, 'click', () => {
+    const toggleTutoredMode = () => {
       showExplanations = !showExplanations;
       updateTutoredToggle();
       if (questions.length) renderQuestion();
-    });
+    };
+    addEvent(ui.tutoredToggle, 'click', toggleTutoredMode);
+    addEvent(ui.mobileTutoredToggle, 'click', toggleTutoredMode);
     addEvent(ui.prevBtn, 'click', prevQuestion);
     addEvent(ui.checkBtn, 'click', checkAnswer);
     addEvent(ui.nextBtn, 'click', () => {
@@ -2279,6 +2329,8 @@
       }
     });
 
+    addEvent(window, 'resize', fitMobileExamHeaderText);
+    addEvent(window, 'orientationchange', fitMobileExamHeaderText);
     addEvent(window, 'beforeunload', saveProgress);
   }
 
