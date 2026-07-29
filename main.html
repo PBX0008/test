@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0067A9" />
+  <meta id="themeColorMeta" name="theme-color" content="#0067A9" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="NCLEX RN" />
@@ -14,13 +14,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/styles.css?v=123" />
+  <link rel="stylesheet" href="assets/styles.css?v=128" />
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="top-left-actions" aria-label="Main controls">
         <button class="icon-button hidden exam-back-title-button" id="backToListBtn" type="button" aria-label="Back to test list"><span class="material-symbols-outlined" aria-hidden="true">arrow_back_ios_new</span><span class="exam-file-name" id="examFileName">EXIT</span></button>
+        <button class="mobile-exam-mode-button" id="mobileTutoredToggle" type="button" aria-label="Toggle explanations" aria-pressed="true">Tutored</button>
       </div>
       <div class="brand" aria-label="Application title">
         <div class="catalog-brand-copy">
@@ -40,12 +41,12 @@
           </button>
           <button class="stat-chip exam-stat-chip" data-stat="progress" type="button" aria-label="Toggle question visibility">
             <span class="metric-toggle-text">Que's:</span>
-            <span class="material-symbols-outlined stat-inline-icon" aria-hidden="true">edit_note</span>
+            <span class="material-symbols-outlined stat-inline-icon" aria-hidden="true">check_box</span>
             <strong class="metric-toggle-text" id="progressStat">0 of 0</strong>
           </button>
         </div>
         <div class="exam-topbar-controls" aria-label="Exam controls">
-          <button class="icon-button text-size-button" id="refreshCatalogBtn" type="button" aria-label="Change text size" title="Text size: Medium"><span class="material-symbols-outlined">format_size</span></button>
+          <button class="icon-button text-size-button" id="refreshCatalogBtn" type="button" aria-label="Change text size" title="Text size: Medium"><span class="material-symbols-outlined" aria-hidden="true">text_fields</span></button>
           <button class="icon-button hidden" id="examThemeBtn" type="button" aria-label="Toggle dark mode"><span class="material-symbols-outlined">dark_mode</span></button>
         </div>
       </div>
@@ -234,10 +235,10 @@
   <script src="repo-config.js?v=98"></script>
   <script src="assets/haptics.js?v=98"></script>
   <script src="assets/access.js?v=98"></script>
-  <script src="assets/app.js?v=123"></script>
+  <script src="assets/app.js?v=128"></script>
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=123').catch(() => {}));
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=128').catch(() => {}));
     }
   </script>
 </body>
