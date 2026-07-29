@@ -18533,15 +18533,13 @@ body.exam-active.dark #examView #questionResultStrip {
   color: transparent !important;
 }
 
-/* v122 — complete exam text scaling, plain Google answer marks, and 45-day device activation. */
 
-/* The exam text-size control now scales every readable text element in the test UI,
-   not only the question stem. Icons keep their own Material Symbols dimensions. */
+/* v123 — complete exam-wide text scaling and plain Google answer marks. */
 body.exam-active.text-size-small {
   --exam-content-font: 14px;
   --exam-ui-font: 12px;
   --exam-meta-font: 11px;
-  --exam-result-title-font: 16px;
+  --exam-title-font: 16px;
   --exam-line-height: 1.52;
 }
 
@@ -18549,7 +18547,7 @@ body.exam-active.text-size-medium {
   --exam-content-font: 16px;
   --exam-ui-font: 13px;
   --exam-meta-font: 12px;
-  --exam-result-title-font: 18px;
+  --exam-title-font: 18px;
   --exam-line-height: 1.64;
 }
 
@@ -18557,82 +18555,95 @@ body.exam-active.text-size-large {
   --exam-content-font: 19px;
   --exam-ui-font: 15px;
   --exam-meta-font: 14px;
-  --exam-result-title-font: 21px;
-  --exam-line-height: 1.72;
+  --exam-title-font: 21px;
+  --exam-line-height: 1.74;
 }
 
-body.exam-active .question-text,
-body.exam-active .question-stem,
-body.exam-active .question-stem *,
-body.exam-active .choice-text,
-body.exam-active .choice-copy,
-body.exam-active .choice-copy *,
-body.exam-active .feedback-body,
-body.exam-active .feedback-body *,
-body.exam-active .feedback-heading,
-body.exam-active .designed-question-pane table,
-body.exam-active .designed-question-pane th,
-body.exam-active .designed-question-pane td,
-body.exam-active .designed-feedback-pane table,
-body.exam-active .designed-feedback-pane th,
-body.exam-active .designed-feedback-pane td,
-body.exam-active .designed-question-pane select,
-body.exam-active .designed-question-pane input:not(.choice-input),
-body.exam-active .designed-question-pane textarea,
-body.exam-active .designed-feedback-pane select,
-body.exam-active .designed-feedback-pane input,
-body.exam-active .designed-feedback-pane textarea {
+/* Main test content: question, choices, rationale, tables, dropdowns and result metrics. */
+body.exam-active #examView .question-text,
+body.exam-active #examView .question-stem,
+body.exam-active #examView .question-stem *,
+body.exam-active #examView .choice-text,
+body.exam-active #examView .choice-copy,
+body.exam-active #examView .choice-copy *,
+body.exam-active #examView .feedback-heading,
+body.exam-active #examView .feedback-body,
+body.exam-active #examView .feedback-body *,
+body.exam-active #examView .explanation-meta,
+body.exam-active #examView .explanation-meta *,
+body.exam-active #examView table,
+body.exam-active #examView thead,
+body.exam-active #examView tbody,
+body.exam-active #examView tr,
+body.exam-active #examView th,
+body.exam-active #examView td,
+body.exam-active #examView select,
+body.exam-active #examView textarea,
+body.exam-active #examView input:not(.choice-input),
+body.exam-active #examView button:not(.exam-nav-button) {
   font-size: var(--exam-content-font, 16px) !important;
   line-height: var(--exam-line-height, 1.64) !important;
 }
 
-body.exam-active .question-result-title {
-  font-size: var(--exam-result-title-font, 18px) !important;
-}
-
-body.exam-active .question-result-row,
-body.exam-active .question-result-row > span,
-body.exam-active .question-result-row > strong,
-body.exam-active .explanation-meta,
-body.exam-active .explanation-meta * {
+/* Compact result card scales too, while retaining a clear title hierarchy. */
+body.exam-active #questionResultStrip,
+body.exam-active #questionResultStrip .question-result-row,
+body.exam-active #questionResultStrip .question-result-row > span,
+body.exam-active #questionResultStrip .question-result-row > strong {
   font-size: var(--exam-ui-font, 13px) !important;
   line-height: 1.35 !important;
 }
+body.exam-active #questionResultStrip .question-result-title {
+  font-size: var(--exam-title-font, 18px) !important;
+  line-height: 1.2 !important;
+}
 
+/* Header, utility strip and footer labels are part of the same text-size setting. */
 body.exam-active .exam-brand-copy strong,
+body.exam-active .exam-brand-copy > span,
 body.exam-active .exam-file-name,
 body.exam-active .exam-mode-button,
 body.exam-active .exam-utility-label,
-body.exam-active .exam-nav-button,
-body.exam-active .exam-nav-button > span:not(.material-symbols-outlined),
-body.exam-active .designed-bottom-bar button,
-body.exam-active .designed-bottom-bar button > span:not(.material-symbols-outlined) {
-  font-size: var(--exam-ui-font, 13px) !important;
-}
-
-body.exam-active .exam-brand-copy > span,
-body.exam-active .exam-stat-chip,
 body.exam-active .exam-stat-chip > span:not(.material-symbols-outlined),
 body.exam-active .exam-stat-chip > strong,
-body.exam-active .exam-utility-button,
-body.exam-active .exam-utility-button .exam-utility-label {
+body.exam-active .designed-bottom-bar button > span:not(.material-symbols-outlined) {
+  font-size: var(--exam-ui-font, 13px) !important;
+  line-height: 1.25 !important;
+}
+body.exam-active .exam-stat-chip > span:not(.material-symbols-outlined),
+body.exam-active .exam-stat-chip > strong,
+body.exam-active .exam-brand-copy > span {
   font-size: var(--exam-meta-font, 12px) !important;
 }
 
-/* Preserve image/media geometry when the surrounding text size changes. */
-body.exam-active .question-stem img,
-body.exam-active .choice-copy img,
-body.exam-active .feedback-body img,
-body.exam-active .question-stem video,
-body.exam-active .choice-copy video,
-body.exam-active .feedback-body video,
+/* Inline source styling must not block the selected size. */
+body.exam-active #examView :where(.question-stem, .choice-copy, .feedback-body) :where(p, div, span, strong, em, b, i, u, li, ol, ul, small, blockquote, caption) {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Do not resize images/media or turn icon ligatures into ordinary text. */
+body.exam-active #examView :where(img, video, audio, svg, canvas, iframe) {
+  font-size: initial !important;
+  line-height: normal !important;
+}
 body.exam-active .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
   line-height: 1 !important;
 }
 
 /* Plain Google check/close marks matching the supplied visual reference. */
 body.exam-active .option-status.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined' !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   font-size: 27px !important;
   font-weight: normal !important;
   font-style: normal !important;
@@ -18641,13 +18652,23 @@ body.exam-active .option-status.material-symbols-outlined {
   font-feature-settings: 'liga' !important;
   text-rendering: optimizeLegibility;
 }
-
 body.exam-active .option-item.correct .option-status.material-symbols-outlined {
   color: #16a34a !important;
 }
-
 body.exam-active .option-item.incorrect .option-status.material-symbols-outlined {
   color: #ef2828 !important;
+}
+body.exam-active .option-status.material-symbols-outlined:empty {
+  color: transparent !important;
+}
+
+/* Keep toolbar and navigation Google icons readable at every text setting. */
+body.exam-active .exam-utility-button .material-symbols-outlined,
+body.exam-active .exam-nav-button .material-symbols-outlined,
+body.exam-active .exam-stat-chip .material-symbols-outlined,
+body.exam-active #backToListBtn .material-symbols-outlined {
+  font-size: 1.05rem !important;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24 !important;
 }
 
 @media (max-width: 390px) {
@@ -18655,284 +18676,18 @@ body.exam-active .option-item.incorrect .option-status.material-symbols-outlined
     --exam-content-font: 13px;
     --exam-ui-font: 11px;
     --exam-meta-font: 10px;
-    --exam-result-title-font: 15px;
+    --exam-title-font: 15px;
   }
-
   body.exam-active.text-size-medium {
     --exam-content-font: 14px;
     --exam-ui-font: 12px;
     --exam-meta-font: 11px;
-    --exam-result-title-font: 17px;
+    --exam-title-font: 17px;
   }
-
   body.exam-active.text-size-large {
     --exam-content-font: 17px;
     --exam-ui-font: 14px;
     --exam-meta-font: 13px;
-    --exam-result-title-font: 20px;
-  }
-}
-
-/* Device-local activation gate. */
-body.access-locked {
-  overflow: hidden !important;
-  touch-action: none;
-}
-
-.access-gate-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000000;
-  display: grid;
-  place-items: center;
-  padding: max(14px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-  overflow: auto;
-  background:
-    radial-gradient(circle at 15% 10%, rgba(78, 178, 235, .35), transparent 38%),
-    radial-gradient(circle at 90% 90%, rgba(0, 103, 169, .24), transparent 42%),
-    rgba(5, 24, 42, .82);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  overscroll-behavior: contain;
-}
-
-.access-gate-card {
-  width: min(440px, 100%);
-  max-height: calc(100dvh - 28px);
-  overflow: auto;
-  margin: 0;
-  padding: 24px;
-  border: 1px solid rgba(255, 255, 255, .72);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, .97);
-  color: #132033;
-  box-shadow: 0 28px 80px rgba(0, 0, 0, .38);
-  font-family: inherit;
-  -webkit-overflow-scrolling: touch;
-}
-
-.access-gate-icon {
-  width: 52px;
-  height: 52px;
-  margin: 0 auto 12px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  background: linear-gradient(145deg, #0078bd, #004f84);
-  color: #fff;
-  box-shadow: 0 10px 24px rgba(0, 103, 169, .28);
-}
-
-.access-gate-icon .material-symbols-outlined {
-  font-size: 29px !important;
-  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24 !important;
-}
-
-.access-gate-kicker {
-  margin: 0 0 5px;
-  color: #0067a9;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .14em;
-  text-align: center;
-}
-
-.access-gate-card h1 {
-  margin: 0;
-  color: #10243a;
-  font-size: clamp(24px, 6vw, 31px);
-  line-height: 1.15;
-  text-align: center;
-}
-
-.access-gate-copy {
-  margin: 10px auto 20px;
-  max-width: 36ch;
-  color: #566579;
-  font-size: 14px;
-  line-height: 1.55;
-  text-align: center;
-}
-
-.access-field {
-  display: grid;
-  gap: 7px;
-  margin: 0 0 14px;
-  color: #20364d;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.access-field input {
-  width: 100%;
-  height: 48px;
-  margin: 0;
-  padding: 0 14px;
-  border: 1.5px solid #c8d5e2;
-  border-radius: 11px;
-  outline: none;
-  background: #fff;
-  color: #111827;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: .02em;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, .04);
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-.access-field input:focus {
-  border-color: #0067a9;
-  box-shadow: 0 0 0 4px rgba(0, 103, 169, .13);
-}
-
-.access-password-rule {
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
-  gap: 8px;
-  align-items: start;
-  margin: 2px 0 10px;
-  padding: 10px 11px;
-  border: 1px solid #d7e6f2;
-  border-radius: 10px;
-  background: #eef7fc;
-  color: #31516b;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.access-password-rule .material-symbols-outlined {
-  margin-top: 1px;
-  color: #0067a9;
-  font-size: 19px !important;
-  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20 !important;
-}
-
-.access-error {
-  min-height: 20px;
-  margin: 0 0 7px;
-  color: #c62828;
-  font-size: 12px;
-  font-weight: 750;
-  line-height: 1.4;
-  text-align: center;
-}
-
-.access-submit {
-  width: 100%;
-  min-height: 49px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #087dbd 0%, #0067a9 100%);
-  color: #fff;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 850;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 10px 22px rgba(0, 103, 169, .25);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.access-submit:hover {
-  filter: brightness(1.04);
-}
-
-.access-submit:active {
-  transform: translateY(1px);
-}
-
-.access-submit:disabled {
-  opacity: .65;
-  cursor: wait;
-}
-
-.access-submit .material-symbols-outlined {
-  font-size: 21px !important;
-  font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24 !important;
-}
-
-.access-local-note {
-  margin: 13px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  color: #728095;
-  font-size: 11px;
-  line-height: 1.35;
-  text-align: center;
-}
-
-.access-local-note .material-symbols-outlined {
-  font-size: 16px !important;
-  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20 !important;
-}
-
-body.dark .access-gate-card {
-  border-color: rgba(255, 255, 255, .13);
-  background: rgba(20, 24, 31, .98);
-  color: #eef3f8;
-}
-
-body.dark .access-gate-card h1,
-body.dark .access-field {
-  color: #f3f6f9;
-}
-
-body.dark .access-gate-copy,
-body.dark .access-local-note {
-  color: #aab5c3;
-}
-
-body.dark .access-field input {
-  border-color: #3d4855;
-  background: #11151b;
-  color: #fff;
-}
-
-body.dark .access-password-rule {
-  border-color: #29455a;
-  background: #172a38;
-  color: #c5d9e8;
-}
-
-@media (max-width: 480px) {
-  .access-gate-overlay {
-    place-items: end center;
-    padding: 10px max(10px, env(safe-area-inset-right, 0px)) max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
-  }
-
-  .access-gate-card {
-    width: 100%;
-    max-height: calc(100dvh - 20px);
-    padding: 19px 16px 17px;
-    border-radius: 19px;
-  }
-
-  .access-gate-icon {
-    width: 46px;
-    height: 46px;
-    margin-bottom: 9px;
-  }
-
-  .access-gate-copy {
-    margin-bottom: 15px;
-    font-size: 13px;
-  }
-
-  .access-field {
-    margin-bottom: 11px;
-  }
-
-  .access-field input {
-    height: 46px;
+    --exam-title-font: 20px;
   }
 }

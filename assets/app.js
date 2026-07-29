@@ -1653,7 +1653,7 @@
       ui.prevBtn.disabled = state.currentIndex === 0;
     }
     if (ui.checkBtn) {
-      ui.checkBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">check_circle</span><span>Check</span>';
+      ui.checkBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">check</span><span>Check</span>';
       ui.checkBtn.classList.toggle('hidden', untutored);
       ui.checkBtn.disabled = untutored || !hasSelection() || completed;
     }
@@ -1795,8 +1795,8 @@
 
     if (ui.resultStatsGrid) {
       const stats = [
-        { icon: 'check_circle', label: 'Correct', value: correct, tone: correct > 0 ? 'correct' : 'neutral' },
-        { icon: 'cancel', label: 'Incorrect', value: incorrect, tone: incorrect > 0 ? 'wrong' : 'neutral' },
+        { icon: 'check', label: 'Correct', value: correct, tone: correct > 0 ? 'correct' : 'neutral' },
+        { icon: 'close', label: 'Incorrect', value: incorrect, tone: incorrect > 0 ? 'wrong' : 'neutral' },
         { icon: 'quiz', label: 'Answered', value: `${attempted}/${total || attempted}`, tone: attempted === total && total > 0 ? 'correct' : 'partial' },
         { icon: 'help_outline', label: 'Unanswered', value: unanswered, tone: unanswered > 0 ? 'partial' : 'neutral' },
         { icon: 'timer', label: 'Total Time', value: formatSeconds(state.seconds), tone: 'neutral' },
@@ -2082,7 +2082,7 @@
     [ui.refreshCatalogBtn, ui.examTextSizeUtilityBtn].forEach((button) => {
       if (!button) return;
       button.title = `Text size: ${label}`;
-      button.setAttribute('aria-label', `Text size: ${label}. Tap to change all test text.`);
+      button.setAttribute('aria-label', `Text size: ${label}. Tap to change all exam text.`);
       button.dataset.size = size;
     });
   }
