@@ -86,14 +86,142 @@
     return storageGet(KEYS.lastLocation, null);
   }
 
+  const AUTH_VALIDITY_MS = 45 * 24 * 60 * 60 * 1000;
+  const IST_OFFSET_MINUTES = 5 * 60 + 30;
+  const PASSWORD_TIME_ADD_MINUTES = 4 * 60 + 14;
+
+  function namePrefix(name) {
+    return String(name || '')
+      .normalize('NFKD')
+      .replace(/[^a-z]/gi, '')
+      .slice(0, 3)
+      .toUpperCase();
+  }
+
+  function passwordForMoment(name, momentMs = Date.now()) {
+    const prefix = namePrefix(name);
+    if (prefix.length !== 3) return '';
+    const adjusted = new Date(momentMs + (IST_OFFSET_MINUTES + PASSWORD_TIME_ADD_MINUTES) * 60 * 1000);
+    const hours = String(adjusted.getUTCHours()).padStart(2, '0');
+    const minutes = String(adjusted.getUTCMinutes()).padStart(2, '0');
+    return `${prefix}${hours}${minutes}`;
+  }
+
+  function validPasswordCandidates(name, nowMs = Date.now()) {
+    // A small time window prevents a correct password becoming invalid while it is being typed.
+    return new Set([-2, -1, 0, 1, 2].map((offset) => passwordForMoment(name, nowMs + offset * 60 * 1000)));
+  }
+
+  function isActiveProfile(profile) {
+    if (!profile || typeof profile !== 'object') return false;
+    const expiresAt = Number(profile.expiresAt || 0);
+    const authenticatedAt = Number(profile.authenticatedAt || 0);
+    if (!profile.name || !expiresAt || !authenticatedAt) return false;
+    if (Date.now() < authenticatedAt - 5 * 60 * 1000) return false;
+    return Date.now() < expiresAt;
+  }
+
   function canUseApp() {
-    return true;
+    return isActiveProfile(getProfile());
+  }
+
+  function removeAccessGate() {
+    document.body.classList.remove('access-locked');
+    document.getElementById('accessGateOverlay')?.remove();
+  }
+
+  function createAccessGate(resolve) {
+    document.getElementById('accessGateOverlay')?.remove();
+    document.body.classList.add('access-locked');
+
+    const saved = getProfile();
+    const overlay = document.createElement('div');
+    overlay.id = 'accessGateOverlay';
+    overlay.className = 'access-gate-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'accessGateTitle');
+    overlay.innerHTML = `
+      <form class="access-gate-card" id="accessGateForm" autocomplete="off">
+        <div class="access-gate-icon" aria-hidden="true"><span class="material-symbols-outlined">lock_person</span></div>
+        <p class="access-gate-kicker">DEVICE ACTIVATION</p>
+        <h1 id="accessGateTitle">Unlock NCLEX RN</h1>
+        <p class="access-gate-copy">Enter the learner's name and the time-based password. Successful activation remains valid on this browser or installed app for 45 days.</p>
+        <label class="access-field" for="accessName">
+          <span>Full name</span>
+          <input id="accessName" name="name" type="text" maxlength="80" autocomplete="name" autocapitalize="words" spellcheck="false" required />
+        </label>
+        <label class="access-field" for="accessPassword">
+          <span>Password</span>
+          <input id="accessPassword" name="password" type="password" maxlength="7" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" required />
+        </label>
+        <div class="access-password-rule">
+          <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+          <span>First 3 name letters in capitals + 24-hour IST after adding 4 hours 14 minutes. Example: Seema → SEE2105 when the adjusted time is 21:05.</span>
+        </div>
+        <p class="access-error" id="accessError" role="alert" aria-live="polite"></p>
+        <button class="access-submit" type="submit">
+          <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
+          <span>Activate for 45 days</span>
+        </button>
+        <p class="access-local-note"><span class="material-symbols-outlined" aria-hidden="true">devices</span>Activation is stored only on this device and browser.</p>
+      </form>`;
+
+    document.body.appendChild(overlay);
+    const form = overlay.querySelector('#accessGateForm');
+    const nameInput = overlay.querySelector('#accessName');
+    const passwordInput = overlay.querySelector('#accessPassword');
+    const error = overlay.querySelector('#accessError');
+    const submit = overlay.querySelector('.access-submit');
+
+    if (saved?.name) nameInput.value = String(saved.name);
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      error.textContent = '';
+      const name = nameInput.value.trim().replace(/\s+/g, ' ');
+      const prefix = namePrefix(name);
+      const entered = passwordInput.value.replace(/\s+/g, '').toUpperCase();
+
+      if (prefix.length !== 3) {
+        error.textContent = 'Enter a name containing at least three English letters.';
+        nameInput.focus();
+        return;
+      }
+
+      if (!validPasswordCandidates(name).has(entered)) {
+        error.textContent = 'The name or password is incorrect. Recalculate it using the current IST time.';
+        passwordInput.select();
+        return;
+      }
+
+      const now = Date.now();
+      submit.disabled = true;
+      const savedSuccessfully = storageSet(KEYS.profile, {
+        version: 2,
+        name,
+        prefix,
+        authenticatedAt: now,
+        expiresAt: now + AUTH_VALIDITY_MS
+      });
+      if (!savedSuccessfully) {
+        submit.disabled = false;
+        error.textContent = 'Activation could not be saved. Allow site storage and try again.';
+        return;
+      }
+      removeAccessGate();
+      resolve(true);
+    });
+
+    requestAnimationFrame(() => (nameInput.value ? passwordInput : nameInput).focus());
   }
 
   async function ensureAppAccess() {
-    document.body.classList.remove('access-locked');
-    document.getElementById('accessGateOverlay')?.remove();
-    return true;
+    if (canUseApp()) {
+      removeAccessGate();
+      return true;
+    }
+    return new Promise((resolve) => createAccessGate(resolve));
   }
 
   function progressSnapshot() {

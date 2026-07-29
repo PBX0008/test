@@ -31,6 +31,14 @@
     examFileName: $('examFileName'),
     themeBtn: $('themeBtn'),
     examThemeBtn: $('examThemeBtn'),
+    examUtilityBar: $('examUtilityBar'),
+    fullscreenExamBtn: $('fullscreenExamBtn'),
+    examTextSizeUtilityBtn: $('examTextSizeUtilityBtn'),
+    examThemeUtilityBtn: $('examThemeUtilityBtn'),
+    markReviewBtn: $('markReviewBtn'),
+    testMetaLine: $('testMetaLine'),
+    qidDisplay: $('qidDisplay'),
+    designedExamMain: $('designedExamMain'),
     tutoredToggle: $('tutoredToggle'),
     heroQbankRing: $('heroQbankRing'),
     heroDoneRing: $('heroDoneRing'),
@@ -59,7 +67,10 @@
     questionText: $('questionText'),
     questionIdBadge: $('questionIdBadge'),
     questionResultStrip: $('questionResultStrip'),
+    questionResultTitle: $('questionResultTitle'),
     questionMarkStat: $('questionMarkStat'),
+    questionRuleStat: $('questionRuleStat'),
+    questionPercentStat: $('questionPercentStat'),
     questionTimeStat: $('questionTimeStat'),
     questionResultStat: $('questionResultStat'),
     questionMarksWrap: $('questionMarksWrap'),
@@ -91,6 +102,8 @@
   let timerId = null;
   let statVisibility = { time: true, progress: true, score: true };
   let showExplanations = true;
+  let catalogHeroMetrics = null;
+
 
   function freshState() {
     return {
@@ -100,6 +113,7 @@
       correctCount: 0,
       seconds: 0,
       questionSeconds: [],
+      marked: [],
       finished: false,
       startedAt: new Date().toISOString(),
       finishedAt: null,
@@ -155,24 +169,180 @@
     });
   }
 
+  function clearCatalogDashboardSpacing() {
+    [
+      '--hero-collapse-progress',
+      '--dash-anchor-space',
+      '--dash-current-space',
+      '--dash-current-height',
+      '--dash-expanded-height',
+      '--dash-collapsed-height',
+      '--dash-collapse-distance',
+      '--dash-live-space',
+      '--dash-scroll-push-y'
+    ].forEach((name) => document.body.style.removeProperty(name));
+  }
+
+  function restoreInlineStyle(name, value) {
+    if (value) document.body.style.setProperty(name, value);
+    else document.body.style.removeProperty(name);
+  }
+
+  function measureCatalogHeroMetrics() {
+    const dashboard = document.querySelector('.final-dashboard-card');
+    if (!dashboard) return null;
+
+    const body = document.body;
+    const previousCollapsed = body.classList.contains('hero-collapsed');
+    const previousProgress = body.style.getPropertyValue('--hero-collapse-progress');
+    const previousCurrentHeight = body.style.getPropertyValue('--dash-current-height');
+    const previousCurrentSpace = body.style.getPropertyValue('--dash-current-space');
+    const previousAnchorSpace = body.style.getPropertyValue('--dash-anchor-space');
+    const previousLiveSpace = body.style.getPropertyValue('--dash-live-space');
+    const previousPushY = body.style.getPropertyValue('--dash-scroll-push-y');
+
+    body.classList.add('dashboard-measuring');
+    ['--dash-current-height', '--dash-current-space', '--dash-anchor-space', '--dash-live-space', '--dash-scroll-push-y'].forEach((name) => body.style.removeProperty(name));
+
+    body.classList.remove('hero-collapsed');
+    body.style.setProperty('--hero-collapse-progress', '0');
+    let rect = dashboard.getBoundingClientRect();
+    const expandedTop = Math.max(rect.top, 0);
+    const expandedHeight = Math.max(rect.height, 1);
+    const expandedBottom = Math.max(rect.bottom, expandedHeight);
+
+    body.classList.add('hero-collapsed');
+    body.style.setProperty('--hero-collapse-progress', '1');
+    rect = dashboard.getBoundingClientRect();
+    const collapsedTop = Math.max(rect.top, 0);
+    const measuredCollapsedHeight = Math.max(rect.height, 1);
+    const measuredCollapsedBottom = Math.max(rect.bottom, measuredCollapsedHeight);
+
+    if (previousCollapsed) body.classList.add('hero-collapsed');
+    else body.classList.remove('hero-collapsed');
+    restoreInlineStyle('--hero-collapse-progress', previousProgress);
+    restoreInlineStyle('--dash-current-height', previousCurrentHeight);
+    restoreInlineStyle('--dash-current-space', previousCurrentSpace);
+    restoreInlineStyle('--dash-anchor-space', previousAnchorSpace);
+    restoreInlineStyle('--dash-live-space', previousLiveSpace);
+    restoreInlineStyle('--dash-scroll-push-y', previousPushY);
+    body.classList.remove('dashboard-measuring');
+
+    const top = Math.min(expandedTop, collapsedTop);
+    const minimumRange = window.innerWidth <= 760 ? 86 : 108;
+    const measuredRange = Math.max(expandedHeight - measuredCollapsedHeight, 0);
+    const collapseDistance = Math.max(measuredRange, minimumRange);
+    const collapsedHeight = Math.max(48, expandedHeight - collapseDistance);
+    const collapsedBottom = top + collapsedHeight;
+
+    return {
+      viewportWidth: window.innerWidth,
+      expandedTop: top,
+      expandedHeight,
+      expandedBottom,
+      collapsedHeight,
+      collapsedBottom,
+      collapseDistance
+    };
+  }
+
+  function ensureCatalogHeroMetrics() {
+    if (!catalogHeroMetrics || Math.abs(catalogHeroMetrics.viewportWidth - window.innerWidth) > 2) {
+      catalogHeroMetrics = measureCatalogHeroMetrics();
+    }
+    return catalogHeroMetrics;
+  }
+
+
+
+  function captureDashboardDonutRects() {
+    const rects = new Map();
+    document.querySelectorAll('.final-dashboard-card .dashboard-donut').forEach((el) => {
+      rects.set(el, el.getBoundingClientRect());
+    });
+    return rects;
+  }
+
+  function animateDashboardDonutMorph(beforeRects) {
+    if (!beforeRects || !beforeRects.size) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (prefersReducedMotion) return;
+
+    document.querySelectorAll('.final-dashboard-card .dashboard-donut').forEach((el) => {
+      const before = beforeRects.get(el);
+      if (!before) return;
+      const after = el.getBoundingClientRect();
+      if (!before.width || !before.height || !after.width || !after.height) return;
+
+      const beforeCenterX = before.left + before.width / 2;
+      const beforeCenterY = before.top + before.height / 2;
+      const afterCenterX = after.left + after.width / 2;
+      const afterCenterY = after.top + after.height / 2;
+      const deltaX = beforeCenterX - afterCenterX;
+      const deltaY = beforeCenterY - afterCenterY;
+      const scaleX = before.width / after.width;
+      const scaleY = before.height / after.height;
+
+      if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5 && Math.abs(scaleX - 1) < 0.01 && Math.abs(scaleY - 1) < 0.01) {
+        return;
+      }
+
+      el.getAnimations?.().forEach((animation) => {
+        if (animation.effect?.target === el) animation.cancel();
+      });
+      el.animate(
+        [
+          { transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})` },
+          { transform: 'translate(0, 0) scale(1, 1)' }
+        ],
+        {
+          duration: 520,
+          easing: 'cubic-bezier(.16, 1, .3, 1)',
+          fill: 'both'
+        }
+      );
+    });
+  }
+
   function updateCatalogHeroCompactState() {
     const isCatalog = document.body.classList.contains('catalog-active');
     const scrollY = Math.max(window.scrollY || document.documentElement.scrollTop || 0, 0);
-    const progress = isCatalog ? Math.min(Math.max(scrollY / 260, 0), 1) : 0;
-    document.body.style.setProperty('--hero-collapse-progress', progress.toFixed(3));
-    document.body.classList.toggle('hero-collapsed', progress > 0.18);
+
     if (!isCatalog) {
       document.body.classList.remove('hero-collapsed');
-      document.body.style.removeProperty('--dash-live-space');
+      clearCatalogDashboardSpacing();
       return;
     }
 
-    const dashboard = document.querySelector('.final-dashboard-card');
-    if (dashboard) {
-      const rect = dashboard.getBoundingClientRect();
-      const liveSpace = Math.max(rect.bottom, 0);
-      document.body.style.setProperty('--dash-live-space', `${liveSpace}px`);
-    }
+    const metrics = ensureCatalogHeroMetrics();
+    const fallbackDistance = window.innerWidth <= 760 ? 110 : 140;
+    const collapseDistance = Math.max(metrics?.collapseDistance || fallbackDistance, 1);
+    const pushY = Math.min(scrollY, collapseDistance);
+    const progress = Math.min(Math.max(pushY / collapseDistance, 0), 1);
+    const expandedTop = metrics?.expandedTop ?? 0;
+    const expandedHeight = metrics?.expandedHeight ?? (window.innerWidth <= 760 ? 206 : 252);
+    const collapsedHeight = metrics?.collapsedHeight ?? Math.max(58, expandedHeight - collapseDistance);
+    const currentHeight = Math.max(collapsedHeight, expandedHeight - pushY);
+    const anchorSpace = expandedTop + expandedHeight;
+    const currentSpace = expandedTop + currentHeight;
+
+    document.body.style.setProperty('--hero-collapse-progress', progress.toFixed(4));
+    document.body.style.setProperty('--dash-scroll-push-y', `${pushY.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-expanded-height', `${expandedHeight.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-collapsed-height', `${collapsedHeight.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-current-height', `${currentHeight.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-anchor-space', `${anchorSpace.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-current-space', `${currentSpace.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-live-space', `${currentSpace.toFixed(2)}px`);
+    document.body.style.setProperty('--dash-collapse-distance', `${collapseDistance.toFixed(2)}px`);
+
+    // The compact grid layout is only enabled at the very end. Until then, the
+    // first question box pushes the dashboard height upward/downward with scroll.
+    const shouldCollapse = progress > 0.985;
+    const wasCollapsed = document.body.classList.contains('hero-collapsed');
+    const donutRects = shouldCollapse !== wasCollapsed ? captureDashboardDonutRects() : null;
+    document.body.classList.toggle('hero-collapsed', shouldCollapse);
+    if (donutRects) animateDashboardDonutMorph(donutRects);
   }
 
   function bindCatalogHeroCompactBehavior() {
@@ -185,8 +355,12 @@
         ticking = false;
       });
     };
+    const onResize = () => {
+      catalogHeroMetrics = null;
+      onScroll();
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
     onScroll();
   }
 
@@ -197,6 +371,7 @@
     if (name === 'result') ui.resultView?.classList.add('active');
 
     ui.bottomBar?.classList.toggle('hidden', name !== 'exam');
+    ui.examUtilityBar?.classList.toggle('hidden', name !== 'exam');
     ui.backToListBtn?.classList.toggle('hidden', name === 'catalog');
     ui.examThemeBtn?.classList.toggle('hidden', name !== 'exam');
     ui.refreshCatalogBtn?.classList.toggle('hidden', false);
@@ -226,6 +401,7 @@
     const label = 'EXIT';
     const title = activeTest?.title || 'test list';
     ui.examFileName.textContent = label;
+    if (ui.testMetaLine) ui.testMetaLine.textContent = activeTest?.title || 'NCLEX-RN';
     ui.backToListBtn?.setAttribute('aria-label', `Exit ${title} and go back to dashboard`);
     ui.backToListBtn?.setAttribute('title', 'EXIT — tap to go back');
   }
@@ -837,14 +1013,14 @@
       const card = document.createElement('article');
       card.className = `test-card ${summary.status === 'done' ? 'completed' : summary.status === 'resume' ? 'resume' : 'new'}`;
       const actionClass = hasProgress && isImported ? 'three' : hasProgress ? 'two' : isImported ? 'two' : 'one';
-      const statusIcon = summary.status === 'done' ? 'workspace_premium' : summary.status === 'resume' ? 'play_circle' : 'fiber_new';
+      const statusIcon = summary.status === 'done' ? 'check_circle' : summary.status === 'resume' ? 'play_circle' : 'new_releases';
       const statusText = summary.status === 'done' ? 'Completed' : summary.status === 'resume' ? 'In progress' : 'New';
-      const actionIcon = hasProgress ? 'play_arrow' : 'rocket_launch';
+      const actionIcon = 'play_arrow';
       card.innerHTML = `
         <div class="premium-card-glow" aria-hidden="true"></div>
         <div class="card-title-row premium-title-row">
           <div class="premium-title-wrap">
-            <span class="material-symbols-outlined premium-title-icon">clinical_notes</span>
+            <span class="material-symbols-outlined premium-title-icon">medical_services</span>
             <h2>${escapeHTML(test.title)}</h2>
           </div>
           <span class="status-badge ${summary.status === 'done' ? 'done' : summary.status === 'resume' ? 'resume' : ''}"><span class="material-symbols-outlined">${statusIcon}</span>${statusText}</span>
@@ -859,10 +1035,10 @@
                 </span>
               </span>
               <div class="test-mini-stat-list test-result-stats" aria-label="Usage and result statistics">
-                <div class="test-mini-stat-row test-used-row"><span>USED QUESTION'S:</span><strong class="test-used-total-value">${summary.attempted} / ${summary.total}</strong><em class="test-mini-badge test-badge-primary">${summary.pct}%</em></div>
-                <div class="test-mini-stat-row"><span>CORRECT QUESTION'S:</span><strong class="test-correct-count-value">0</strong><em class="test-mini-badge test-badge-correct">0%</em></div>
-                <div class="test-mini-stat-row"><span>INCORRECT QUESTION'S:</span><strong class="test-incorrect-count-value">0</strong><em class="test-mini-badge test-badge-incorrect">0%</em></div>
-                <div class="test-mini-stat-row"><span>PARTIALLY INCORRECT QUE'S:</span><strong class="test-partial-count-value">0</strong><em class="test-mini-badge test-badge-omitted">0%</em></div>
+                <div class="test-mini-stat-row test-used-row"><span>USED QUE'S:</span><strong class="test-used-total-value">${summary.attempted} / ${summary.total}</strong><em class="test-mini-badge test-badge-primary">${summary.pct}%</em></div>
+                <div class="test-mini-stat-row"><span>CORRECT QUE'S:</span><strong class="test-correct-count-value">0</strong><em class="test-mini-badge test-badge-correct">0%</em></div>
+                <div class="test-mini-stat-row"><span>INCORRECT QUE'S:</span><strong class="test-incorrect-count-value">0</strong><em class="test-mini-badge test-badge-incorrect">0%</em></div>
+                <div class="test-mini-stat-row"><span>PARTIALLY INCORR:</span><strong class="test-partial-count-value">0</strong><em class="test-mini-badge test-badge-omitted">0%</em></div>
               </div>
             </section>
           </div>
@@ -909,6 +1085,7 @@
       correctCount: Number(saved.correctCount || 0),
       seconds: Number(saved.seconds || 0),
       questionSeconds: Array.isArray(saved.questionSeconds) ? saved.questionSeconds.map((value) => Number(value || 0)) : [],
+      marked: Array.isArray(saved.marked) ? saved.marked.map(Boolean) : [],
       finished: Boolean(saved.finished),
       finishedAt: saved.finishedAt || null,
       startedAt: saved.startedAt || new Date().toISOString(),
@@ -919,10 +1096,13 @@
   function ensureStateShape() {
     if (!Array.isArray(state.answers)) state.answers = [];
     if (!Array.isArray(state.completed)) state.completed = [];
+    if (!Array.isArray(state.marked)) state.marked = [];
     while (state.answers.length < questions.length) state.answers.push(null);
     while (state.completed.length < questions.length) state.completed.push(false);
+    while (state.marked.length < questions.length) state.marked.push(false);
     state.answers = state.answers.slice(0, questions.length);
     state.completed = state.completed.slice(0, questions.length);
+    state.marked = state.marked.slice(0, questions.length);
     state.currentIndex = Math.min(Math.max(Number(state.currentIndex || 0), 0), Math.max(questions.length - 1, 0));
   }
 
@@ -1208,6 +1388,24 @@
     return '';
   }
 
+  function getQuestionScore(question, answer) {
+    const selected = Array.isArray(answer)
+      ? answer
+      : (answer === null || answer === undefined ? [] : [answer]);
+    const correctAnswers = Array.isArray(question?.correct) ? question.correct : [];
+    const maxScore = Math.max(correctAnswers.length, 1);
+    const correctSelections = selected.filter((index) => correctAnswers.includes(index)).length;
+    const incorrectSelections = selected.filter((index) => !correctAnswers.includes(index)).length;
+    const exact = isAnswerCorrect(question, answer);
+    const score = question?.isMulti
+      ? Math.min(maxScore, Math.max(0, correctSelections - incorrectSelections))
+      : (exact ? 1 : 0);
+    const percentage = Math.round((score / maxScore) * 100);
+    const title = exact ? 'Correct' : (score > 0 ? 'Partially Correct' : 'Incorrect');
+    const tone = exact ? 'correct' : (score > 0 ? 'partial' : 'incorrect');
+    return { score, maxScore, percentage, title, tone };
+  }
+
   function renderQuestionResult() {
     if (!ui.questionResultStrip) return;
     if (!showExplanations) {
@@ -1222,28 +1420,20 @@
 
     if (!completed || !question) {
       ui.questionResultStrip.classList.add('hidden');
-      ui.questionMarksWrap?.classList.remove('is-correct', 'is-incorrect');
-      ui.questionStateWrap?.classList.remove('is-correct', 'is-incorrect');
+      ui.questionResultStrip.classList.remove('result-correct', 'result-partial', 'result-incorrect');
       return;
     }
 
-    const correct = isAnswerCorrect(question, answer);
-    ui.questionResultStrip.classList.remove('hidden');
-    ui.questionMarkStat.textContent = correct ? '1/1' : '0/1';
-    ui.questionTimeStat.textContent = formatSeconds(elapsed);
-    ui.questionResultStat.textContent = correct ? 'Correct' : 'Incorrect';
-
-    const stateIcon = ui.questionStateWrap?.querySelector('.material-symbols-outlined');
-    const markIcon = ui.questionMarksWrap?.querySelector('.material-symbols-outlined');
-    if (stateIcon) stateIcon.textContent = correct ? 'check_circle' : 'cancel';
-    if (markIcon) markIcon.textContent = correct ? 'star' : 'star_outline';
-
-    ui.questionMarksWrap?.classList.toggle('is-correct', correct);
-    ui.questionMarksWrap?.classList.toggle('is-incorrect', !correct);
-    ui.questionStateWrap?.classList.toggle('is-correct', correct);
-    ui.questionStateWrap?.classList.toggle('is-incorrect', !correct);
+    const result = getQuestionScore(question, answer);
+    ui.questionResultStrip.classList.remove('hidden', 'result-correct', 'result-partial', 'result-incorrect');
+    ui.questionResultStrip.classList.add(`result-${result.tone}`);
+    if (ui.questionResultTitle) ui.questionResultTitle.textContent = result.title;
+    if (ui.questionMarkStat) ui.questionMarkStat.textContent = `${result.score}/${result.maxScore}`;
+    if (ui.questionRuleStat) ui.questionRuleStat.textContent = `${result.score}/${result.maxScore}`;
+    if (ui.questionPercentStat) ui.questionPercentStat.textContent = `${result.percentage}%`;
+    if (ui.questionTimeStat) ui.questionTimeStat.textContent = formatSeconds(elapsed);
+    if (ui.questionResultStat) ui.questionResultStat.textContent = result.title;
   }
-
 
   function getChoiceLabel(question, index) {
     if (question?.isMulti) return `${index + 1}.`;
@@ -1263,6 +1453,10 @@
 
     const qidText = question.qid || question.id || state.currentIndex + 1;
     if (ui.questionIdBadge) ui.questionIdBadge.textContent = `QID-${qidText}`;
+    if (ui.qidDisplay) ui.qidDisplay.textContent = `QID-${qidText}`;
+    if (ui.testMetaLine) ui.testMetaLine.textContent = activeTest?.title || 'NCLEX-RN';
+    ui.designedExamMain?.classList.toggle('show-result', completed && showExplanations);
+    updateMarkReviewButton();
     ui.questionText.innerHTML = `<div class="question-stem">${question.question}</div>`;
     enhanceMediaElements(ui.questionText, question.basePath);
     ui.optionsList.innerHTML = '';
@@ -1294,6 +1488,7 @@
     if (completed) renderFeedback();
     else {
       ui.feedbackCard.classList.add('hidden');
+      ui.designedExamMain?.classList.remove('show-result');
       ui.questionResultStrip?.classList.add('hidden');
     }
     renderQuestionResult();
@@ -1374,6 +1569,22 @@
     }
     saveProgress();
     renderQuestion();
+    scrollQuestionResultToTop();
+  }
+
+  function scrollQuestionResultToTop() {
+    if (!ui.questionResultStrip || ui.questionResultStrip.classList.contains('hidden')) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        ui.questionResultStrip.scrollIntoView({
+          block: 'start',
+          inline: 'nearest',
+          behavior: reduceMotion ? 'auto' : 'smooth'
+        });
+        try { ui.questionResultStrip.focus({ preventScroll: true }); } catch {}
+      });
+    });
   }
 
   function questionExplanationMeta(question) {
@@ -1398,8 +1609,8 @@
     const correct = isAnswerCorrect(question, answer);
     const correctLabels = question.correct.map((index) => getChoiceLabel(question, index).replace(/\.$/, '')).join(', ');
 
-    ui.feedbackCard.className = `feedback-card${correct ? '' : ' incorrect'}`;
-    ui.feedbackHeading.textContent = correct ? 'Correct' : 'Rationale';
+    ui.feedbackCard.className = `feedback-card designed-feedback-pane${correct ? '' : ' incorrect'}`;
+    ui.feedbackHeading.textContent = 'Explanation';
     const explanationContent = question.explanation
       ? (/<\s*(p|div|ul|ol|table|body|html)\b/i.test(question.explanation) ? question.explanation : `<p>${question.explanation}</p>`)
       : '<p>No rationale provided.</p>';
@@ -1417,14 +1628,14 @@
         li.classList.add('correct');
         if (status) {
           status.classList.add('is-visible');
-          status.textContent = 'check_circle';
+          status.textContent = 'check';
           status.setAttribute('aria-label', 'Correct option');
         }
       } else if (selected) {
         li.classList.add('incorrect');
         if (status) {
           status.classList.add('is-visible');
-          status.textContent = 'cancel';
+          status.textContent = 'close';
           status.setAttribute('aria-label', 'Incorrect option');
         }
       }
@@ -1435,15 +1646,55 @@
   function updateButtons() {
     const completed = Boolean(state.completed[state.currentIndex]);
     const untutored = !showExplanations;
-    ui.prevBtn.textContent = 'Previous';
-    ui.checkBtn.textContent = 'Check';
-    ui.nextBtn.textContent = state.currentIndex === questions.length - 1 ? 'Finish' : 'Next';
-    ui.prevBtn.disabled = state.currentIndex === 0;
-    ui.checkBtn.classList.toggle('hidden', untutored);
+    const isLastQuestion = state.currentIndex === questions.length - 1;
+
+    if (ui.prevBtn) {
+      ui.prevBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span>Previous</span>';
+      ui.prevBtn.disabled = state.currentIndex === 0;
+    }
+    if (ui.checkBtn) {
+      ui.checkBtn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">check_circle</span><span>Check</span>';
+      ui.checkBtn.classList.toggle('hidden', untutored);
+      ui.checkBtn.disabled = untutored || !hasSelection() || completed;
+    }
+    if (ui.nextBtn) {
+      ui.nextBtn.innerHTML = isLastQuestion
+        ? '<span>Result</span><span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>'
+        : '<span>Next</span><span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>';
+      ui.nextBtn.setAttribute('aria-label', isLastQuestion ? 'Show test result' : 'Next question');
+      ui.nextBtn.classList.toggle('is-result-button', isLastQuestion);
+      ui.nextBtn.classList.remove('hidden');
+      ui.nextBtn.disabled = showExplanations ? !completed : false;
+    }
     ui.bottomBar?.classList.toggle('untutored-mode', untutored);
-    ui.checkBtn.disabled = untutored || !hasSelection() || completed;
-    ui.nextBtn.classList.remove('hidden');
-    ui.nextBtn.disabled = showExplanations ? !completed : false;
+  }
+
+  function updateMarkReviewButton() {
+    if (!ui.markReviewBtn) return;
+    ensureStateShape();
+    const marked = Boolean(state.marked[state.currentIndex]);
+    ui.markReviewBtn.classList.toggle('is-marked', marked);
+    ui.markReviewBtn.setAttribute('aria-pressed', String(marked));
+    ui.markReviewBtn.setAttribute('aria-label', marked ? 'Remove mark for review' : 'Mark question for review');
+    const label = ui.markReviewBtn.querySelector('.exam-utility-label');
+    if (label) label.textContent = marked ? 'Marked' : 'Mark for Review';
+  }
+
+  function toggleMarkForReview() {
+    if (!questions.length) return;
+    ensureStateShape();
+    state.marked[state.currentIndex] = !state.marked[state.currentIndex];
+    saveProgress();
+    updateMarkReviewButton();
+  }
+
+  async function toggleExamFullscreen() {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+      else await document.exitFullscreen?.();
+    } catch (error) {
+      console.info('Fullscreen is unavailable on this device:', error);
+    }
   }
 
   function formatSeconds(seconds) {
@@ -1544,10 +1795,10 @@
 
     if (ui.resultStatsGrid) {
       const stats = [
-        { icon: 'task_alt', label: 'Correct', value: correct, tone: correct > 0 ? 'correct' : 'neutral' },
+        { icon: 'check_circle', label: 'Correct', value: correct, tone: correct > 0 ? 'correct' : 'neutral' },
         { icon: 'cancel', label: 'Incorrect', value: incorrect, tone: incorrect > 0 ? 'wrong' : 'neutral' },
         { icon: 'quiz', label: 'Answered', value: `${attempted}/${total || attempted}`, tone: attempted === total && total > 0 ? 'correct' : 'partial' },
-        { icon: 'pending_actions', label: 'Unanswered', value: unanswered, tone: unanswered > 0 ? 'partial' : 'neutral' },
+        { icon: 'help_outline', label: 'Unanswered', value: unanswered, tone: unanswered > 0 ? 'partial' : 'neutral' },
         { icon: 'timer', label: 'Total Time', value: formatSeconds(state.seconds), tone: 'neutral' },
         { icon: 'speed', label: 'Avg / Q', value: formatSeconds(avgSeconds), tone: 'neutral' }
       ];
@@ -1825,14 +2076,15 @@
 
   function applyTextSize() {
     const size = normalizeTextSize(storageGet(STORAGE.textSize, 'medium'));
+    const label = size.charAt(0).toUpperCase() + size.slice(1);
     document.body.classList.remove('text-size-small', 'text-size-medium', 'text-size-large');
     document.body.classList.add(`text-size-${size}`);
-    if (ui.refreshCatalogBtn) {
-      const label = size.charAt(0).toUpperCase() + size.slice(1);
-      ui.refreshCatalogBtn.title = `Text size: ${label}`;
-      ui.refreshCatalogBtn.setAttribute('aria-label', `Text size: ${label}. Tap to change.`);
-      ui.refreshCatalogBtn.dataset.size = size;
-    }
+    [ui.refreshCatalogBtn, ui.examTextSizeUtilityBtn].forEach((button) => {
+      if (!button) return;
+      button.title = `Text size: ${label}`;
+      button.setAttribute('aria-label', `Text size: ${label}. Tap to change all test text.`);
+      button.dataset.size = size;
+    });
   }
 
   function cycleTextSize() {
@@ -1968,6 +2220,10 @@
     addEvent(ui.backToListBtn, 'click', goToCatalog);
     addEvent(ui.themeBtn, 'click', toggleTheme);
     addEvent(ui.examThemeBtn, 'click', toggleTheme);
+    addEvent(ui.fullscreenExamBtn, 'click', toggleExamFullscreen);
+    addEvent(ui.examTextSizeUtilityBtn, 'click', cycleTextSize);
+    addEvent(ui.examThemeUtilityBtn, 'click', toggleTheme);
+    addEvent(ui.markReviewBtn, 'click', toggleMarkForReview);
     addEvent(ui.liveDarshanBtn, 'click', toggleGurbaniAudio);
     addEvent(ui.gurbaniAudio, 'play', () => updateGurbaniCardState(true));
     addEvent(ui.gurbaniAudio, 'pause', () => updateGurbaniCardState(false));
@@ -1976,8 +2232,7 @@
     addEvent(ui.tutoredToggle, 'click', () => {
       showExplanations = !showExplanations;
       updateTutoredToggle();
-      if (!showExplanations) ui.feedbackCard.classList.add('hidden');
-      else if (questions.length && state.completed[state.currentIndex]) renderFeedback();
+      if (questions.length) renderQuestion();
     });
     addEvent(ui.prevBtn, 'click', prevQuestion);
     addEvent(ui.checkBtn, 'click', checkAnswer);

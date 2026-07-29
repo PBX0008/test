@@ -5,8 +5,8 @@
     "file": "questions/cardiology.json",
     "format": "json",
     "order": 1,
-    "questions": 77,
-    "description": "77 questions",
+    "questions": 76,
+    "description": "76 questions",
     "tags": [
       "Cardiovascular",
       "Management",

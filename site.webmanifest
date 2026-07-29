@@ -1,7 +1,7 @@
 {
   "name": "NCLEX RN Practice Bank",
   "short_name": "NCLEX RN",
-  "description": "Mobile-friendly NCLEX RN practice question bank with saved progress.",
+  "description": "NCLEX RN question bank with saved progress.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

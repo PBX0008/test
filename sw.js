@@ -1,7 +1,9 @@
-const CACHE_NAME = 'nclex-rn-practice-v105';
-const META_CACHE_NAME = 'nclex-rn-practice-meta-v105';
+const CACHE_NAME = 'nclex-rn-practice-v122';
+const META_CACHE_NAME = 'nclex-rn-practice-meta-v122';
 const OFFLINE_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 const APP_SHELL = [
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap',
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap',
   './.nojekyll',
   './admin.html',
   './404.html',
@@ -171,6 +173,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (!isHttpLikeUrl(request.url)) return;
   const url = new URL(request.url);
+  const isGoogleIconAsset = url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com';
+  if (isGoogleIconAsset) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
   if (url.origin !== self.location.origin) return;
   if (url.pathname.includes('/__nclex_sw_meta__/')) return;
 
