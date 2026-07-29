@@ -17,7 +17,7 @@
 		<link rel="apple-touch-icon" href="icons/icon-192.png" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=block" />
 		<link rel="stylesheet" href="assets/css/main.css?v=98" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	</head>
@@ -60,7 +60,7 @@
 		</div>
 		<script src="repo-config.js?v=98"></script>
 		<script src="assets/haptics.js?v=98"></script>
-		<script src="assets/access.js?v=122"></script>
+		<script src="assets/access.js?v=98"></script>
 		<script>
 			window.onload = function() { document.body.classList.remove('is-preload'); window.NCLEX_ACCESS?.initWelcomeAccess?.(); }
 			window.ontouchmove = null;
@@ -68,7 +68,7 @@
 		</script>
 			<script>
 			if ('serviceWorker' in navigator) {
-				window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=122').catch(() => {}));
+				window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js?v=121').catch(() => {}));
 			}
 		</script>
 	</body>
