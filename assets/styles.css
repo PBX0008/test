@@ -20586,3 +20586,156 @@ body.exam-active #backToListBtn .material-symbols-outlined {
     background: rgba(255,255,255,.025) !important;
   }
 }
+
+/* =====================================================================
+   v129 — exact mobile shortcut layout correction.
+   Removes the duplicate in-app blue safe-area tier and locks the visible
+   exam bar/content geometry to the supplied installed-PWA reference.
+   ===================================================================== */
+@media (max-width: 760px) {
+  :root {
+    /* The operating-system status area already occupies the upper blue zone. */
+    --mh-upper: 0px !important;
+    --mh-separator: min(2px, .472813vw) !important;
+    --mh-lower: min(35px, 8.274232vw) !important;
+    --mh-total: calc(var(--mh-separator) + var(--mh-lower)) !important;
+    --designed-exam-topbar: calc(var(--mh-total) + env(safe-area-inset-top, 0px)) !important;
+    --topbar-fixed-height: var(--designed-exam-topbar) !important;
+    --designed-exam-utility: 0px !important;
+  }
+
+  html body.exam-active .topbar::before {
+    top: env(safe-area-inset-top, 0px) !important;
+  }
+
+  html body.exam-active .topbar-inner {
+    top: calc(env(safe-area-inset-top, 0px) + var(--mh-separator)) !important;
+  }
+
+  /* Reference content begins 11 px below the bar and 10 px from the left. */
+  html body.exam-active .designed-question-pane,
+  html body.exam-active .designed-feedback-pane {
+    padding: 11px 10px 24px !important;
+  }
+
+  /* Reference right cluster: widely separated display controls + full-width metrics. */
+  html body.exam-active .topbar-inner .top-actions {
+    right: min(4px, .945626vw) !important;
+    width: min(109px, 27.948718vw) !important;
+    min-width: min(109px, 27.948718vw) !important;
+    max-width: min(109px, 27.948718vw) !important;
+    height: var(--mh-lower) !important;
+    min-height: var(--mh-lower) !important;
+    max-height: var(--mh-lower) !important;
+    top: 0 !important;
+    transform: none !important;
+    display: grid !important;
+    grid-template-columns: min(61px, 15.641026vw) min(44px, 11.282051vw) !important;
+    grid-template-rows: var(--mh-lower) !important;
+    gap: min(4px, 1.025641vw) !important;
+    align-items: center !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-topbar-controls {
+    width: min(61px, 15.641026vw) !important;
+    min-width: min(61px, 15.641026vw) !important;
+    max-width: min(61px, 15.641026vw) !important;
+    height: var(--mh-lower) !important;
+    min-height: var(--mh-lower) !important;
+    max-height: var(--mh-lower) !important;
+    display: grid !important;
+    grid-template-columns: min(21px, 5.384615vw) min(21px, 5.384615vw) !important;
+    gap: min(19px, 4.871795vw) !important;
+    align-items: center !important;
+    align-content: center !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-topbar-controls .icon-button,
+  html body.exam-active .topbar-inner .exam-topbar-controls .icon-button.hidden {
+    width: min(21px, 5.384615vw) !important;
+    min-width: min(21px, 5.384615vw) !important;
+    max-width: min(21px, 5.384615vw) !important;
+    height: min(22px, 5.641026vw) !important;
+    min-height: min(22px, 5.641026vw) !important;
+    max-height: min(22px, 5.641026vw) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-topbar-controls .icon-button .material-symbols-outlined {
+    width: min(21px, 5.384615vw) !important;
+    height: min(22px, 5.641026vw) !important;
+    font-size: min(22px, 5.641026vw) !important;
+    line-height: min(22px, 5.641026vw) !important;
+    overflow: visible !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-topbar-status {
+    width: min(44px, 11.282051vw) !important;
+    min-width: min(44px, 11.282051vw) !important;
+    max-width: min(44px, 11.282051vw) !important;
+    height: var(--mh-lower) !important;
+    min-height: var(--mh-lower) !important;
+    max-height: var(--mh-lower) !important;
+    padding: 0 !important;
+    display: grid !important;
+    grid-template-rows: 1fr 1fr !important;
+    align-content: stretch !important;
+    align-items: center !important;
+    gap: 0 !important;
+    overflow: visible !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-topbar-status .exam-stat-chip,
+  html body.exam-active .topbar-inner .exam-topbar-status .exam-stat-chip:hover,
+  html body.exam-active .topbar-inner .exam-topbar-status .exam-stat-chip:focus,
+  html body.exam-active .topbar-inner .exam-topbar-status .exam-stat-chip:focus-visible {
+    width: min(44px, 11.282051vw) !important;
+    min-width: min(44px, 11.282051vw) !important;
+    max-width: min(44px, 11.282051vw) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    text-align: right !important;
+    line-height: 1 !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-stat-chip > span:first-child,
+  html body.exam-active .topbar-inner .exam-stat-chip .stat-inline-icon {
+    display: none !important;
+  }
+
+  html body.exam-active .topbar-inner .exam-stat-chip > strong {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    overflow: visible !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: min(8px, 2.051282vw) !important;
+    font-weight: 850 !important;
+    line-height: 1 !important;
+    letter-spacing: -.02em !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+  }
+
+  /* Keep title/QID tied to the true viewport centre. */
+  html body.exam-active .topbar-inner .brand {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
